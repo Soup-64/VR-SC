@@ -19,6 +19,9 @@ pkgs.mkShell rec {
     git
     godot_4
     vscodium
+    xxd
+    gpu-screen-recorder
+    ffmpeg_7-full
     ];
 
   NIX_LD_LIBRARY_PATH = lib.makeLibraryPath ([
