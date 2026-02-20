@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 
 class Program
@@ -8,8 +9,10 @@ class Program
     static readonly string targetPort = "8825";
 
 
-    static void Main()
+    static async Task Main()
     {
+        await Capture.processDbus();
+        return;
         //string procArgs = $" -stream_loop -1 -i {file} -vcodec libx264 -preset ultrafast -tune zerolatency -f mpegts udp://{targetIp}:{targetPort}";
 
         Console.WriteLine($"Starting...");
