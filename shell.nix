@@ -22,6 +22,7 @@ pkgs.mkShell rec {
     gst_all_1.gst-plugins-ugly
     gst_all_1.gst-plugins-good
     gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-rs #more av1 and other improved plugins
   ];
 
   packages = [

@@ -11,7 +11,6 @@ namespace DesktopCapture;
 
 class Capture
 {
-
     public static async Task ProcessDbus()
     {
         int reqnum = 0;
@@ -91,7 +90,8 @@ class Capture
             });
 
         var startRequest = connection.CreateProxy<IRequest>("org.freedesktop.portal.Desktop", startRequestHandle);
-        var startTcs = new TaskCompletionSource<uint>();
+
+        var startTcs = new TaskCompletionSource<(uint nodeId, int width, int height)>();
 
         await startRequest.WatchResponseAsync(reply =>
         {
@@ -99,7 +99,27 @@ class Capture
             {
                 var streams = ((uint nodeId, IDictionary<string, object> props)[])reply.results["streams"];
                 uint selectedNodeId = streams[0].nodeId;
-                startTcs.SetResult(selectedNodeId);
+                var props = streams[0].props;
+                Console.WriteLine(streams.Length);
+                foreach (var prop in streams[0].props)
+                {
+                    Console.WriteLine($"key: {prop.Key} value: {prop.Value}");
+                }
+
+                int width = 1920;
+                int height = 1080;
+
+                if (props.TryGetValue("size", out var sizeObj) && sizeObj is ValueTuple<int, int> size)
+                {
+                    width = size.Item1;
+                    height = size.Item2;
+                }
+                else
+                {
+                    Console.WriteLine("Dimensions error! using fallback...");
+                }
+
+                startTcs.SetResult((selectedNodeId, width, height));
             }
             else
             {
@@ -107,7 +127,7 @@ class Capture
             }
         });
 
-        uint pipewireNode = await startTcs.Task;
+        var (pipewireNode, sourceWidth, sourceHeight) = await startTcs.Task;
         Console.WriteLine("accept!");
 
         CloseSafeHandle fdHandle = await castPortal.OpenPipeWireRemoteAsync(
@@ -122,18 +142,52 @@ class Capture
         Application.Init();
         Console.WriteLine(Application.VersionString());
 
-        // string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} ! videorate ! video/x-raw,format=I420,framerate=60/1 ! videoconvert ! filesink location=wayland_capture.mp4";
-        string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} ! " +
-                            $"videoconvert ! video/x-raw,format=I420,framerate=60/1 ! " +
-                            $"x264enc pass=qual quantizer=20 speed-preset=superfast ! matroskamux ! " + //tune=zerolatency if you want video, unlimited video, but no video.
-                            $"filesink location=wayland_capture.mkv";
+        //cpu version
+        //rav1enc vs svtav1enc, hard call
+        // string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} always-copy=true ! " +
+        //                 $"video/x-raw ! " +
+        //                 $"videoconvert ! videorate ! " +
+        //                 $"video/x-raw,format=I420,framerate=60/1 ! queue ! " +
+        //                 $"svtav1enc target-bitrate=10000 ! av1parse ! " + //mostly unusable, tuning needed?
+        //                 // $"rav1enc bitrate=10000 ! av1parse ! " +  //actually unusable
+        //                 $"rtpav1pay ! udpsink host=127.0.0.1 port=8255 sync=false"; 
+        //                 $"matroskamux ! filesink location=wayland_capture_cpu.mkv";
+
+        //keepalive-time resend every 16ms if no new frames to avoid latency spikes on lazy processing
+        //always-copy trying to work with raw dmabuf formats in VRAM seems to be impossible so we have to copy and soft reformat
+        //(colorspace pixel format stuff mostly) before encoding
+        //videoscale/videorate required to use fps and other values when specifying format
+        //queue required to eliminate stutter
+        //av1 since very fast and light on the network 
+        //we use vbr to enhance fine low contrast details, otherwise very blocky, variable bitrate with a 10,000 limit
+        //av1parse is just a formality thing, not really sure what it does other than being a post encode step,
+        //containerization/headers maybe?
+        //rtpav1pay wrap into rtp (realtime protocol) packets sent using UDP
+        //then udp sink as usual
+        //sync=false to ignore timing data because we want the most recent frame regardless in this case,
+        //very important for streaming/realtime, otherwise you get absurd stutter/latency issues
+
+        //KNOWN ISSUES
+        //resizing will nuke the stream, pipeline has to be rebuilt but handling this is very hard
+        //artifacting on certain window sizes
+        //mostly mitigated by targeting full screen share only instead
+        string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} always-copy=true keepalive-time=16 ! " +
+                        $"videoconvert ! videorate ! " +
+                        $"video/x-raw,format=NV12,framerate=60/1 ! queue ! " +
+                        $"vaav1enc rate-control=vbr bitrate=10000 ! av1parse ! " + //rav1enc for cpu?
+                        $"rtpav1pay ! udpsink host=127.0.0.1 port=8255 sync=false";
+        //                 //$"matroskamux ! filesink location=wayland_capture_gpu.mkv";
 
         var pipeline = Parse.Launch(pipestr);
-        Console.WriteLine(pipeline != null);
+        Console.WriteLine($"Pipeline valid? [{pipeline != null}]");
+        Console.WriteLine($"Dims: {sourceWidth}X{sourceHeight}");
         if (pipeline == null) return;
         pipeline.SetState(State.Playing);
 
         Console.ReadLine();
+
+        //for testing file size
+        // Thread.Sleep(5000);
 
         pipeline.SendEvent(Event.NewEos());
 
