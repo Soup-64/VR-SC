@@ -15,6 +15,14 @@ run/main_scene="uid://cqp2agwihumw"
 config/features=PackedStringArray("4.6", "Mobile")
 config/icon="res://icon.svg"
 
+[debug]
+
+gdscript/warnings/untyped_declaration=2
+
+[display]
+
+window/vsync/vsync_mode=0
+
 [physics]
 
 3d/physics_engine="Jolt Physics"
@@ -23,3 +31,18 @@ config/icon="res://icon.svg"
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+
+[xr]
+
+openxr/enabled=true
+openxr/environment_blend_mode=2
+openxr/extensions/spatial_entity/enabled=true
+openxr/extensions/spatial_entity/enable_spatial_anchors=true
+openxr/extensions/spatial_entity/enable_persistent_anchors=true
+openxr/extensions/spatial_entity/enable_builtin_anchor_detection=true
+openxr/extensions/spatial_entity/enable_plane_tracking=true
+openxr/extensions/spatial_entity/enable_builtin_plane_detection=true
+openxr/extensions/spatial_entity/enable_marker_tracking=true
+openxr/extensions/spatial_entity/enable_builtin_marker_tracking=true
+openxr/extensions/eye_gaze_interaction=true
+shaders/enabled=true
