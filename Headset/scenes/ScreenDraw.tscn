@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://bvtubrkfrgd10"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_o5qli"]
+noise_type = 3
+frequency = 0.4132
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_o6jb2"]
+noise = SubResource("FastNoiseLite_o5qli")
+
+[node name="ScreenDraw" type="Control" unique_id=88709259]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=1658356183]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = SubResource("NoiseTexture2D_o6jb2")

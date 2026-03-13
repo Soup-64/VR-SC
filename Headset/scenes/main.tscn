@@ -1,6 +1,19 @@
 [gd_scene format=3 uid="uid://cqp2agwihumw"]
 
 [ext_resource type="Script" uid="uid://1f05dacckes0" path="res://scripts/main.gd" id="1_o5qli"]
+[ext_resource type="PackedScene" uid="uid://bvtubrkfrgd10" path="res://scenes/ScreenDraw.tscn" id="2_0wfyh"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_o5qli"]
+size = Vector2(2, 2)
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_o5qli"]
+viewport_path = NodePath("Plane/SubViewport")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0wfyh"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+albedo_texture = SubResource("ViewportTexture_o5qli")
 
 [node name="Root" type="Node3D" unique_id=1933782952]
 script = ExtResource("1_o5qli")
@@ -17,3 +30,15 @@ tracker = &"left_hand"
 [node name="RightHand" type="XRController3D" parent="XROrigin3D" unique_id=83625640]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5)
 tracker = &"right_hand"
+
+[node name="Plane" type="MeshInstance3D" parent="." unique_id=1977689238]
+transform = Transform3D(0.98737514, 0, -0.15839933, 0, 1, 0, 0.15839933, 0, 0.98737514, 0, 1.5, -3)
+mesh = SubResource("QuadMesh_o5qli")
+surface_material_override/0 = SubResource("StandardMaterial3D_0wfyh")
+
+[node name="SubViewport" type="SubViewport" parent="Plane" unique_id=253627729]
+
+[node name="ScreenDraw" parent="Plane/SubViewport" unique_id=88709259 instance=ExtResource("2_0wfyh")]
+
+[node name="Screen" type="Node3D" parent="." unique_id=1538671558]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -3)
