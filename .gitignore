@@ -18,3 +18,4 @@ bin/
 obj/
 *.mkv
 *.mp4
+/Shared-Memory-Godot
