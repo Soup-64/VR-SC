@@ -1,0 +1,11 @@
+[configuration]
+
+entry_symbol = "library_init"
+compatibility_minimum = "4.4"
+reloadable = false
+
+[libraries]
+
+linux.debug.single.x86_64 = "./linux/libSharedMemory.linux.template_debug.single.x86_64.so"
+
+#linux.release.single.x86_64 = "./linux/libSharedMemory.linux.template_release.single.x86_64.so"

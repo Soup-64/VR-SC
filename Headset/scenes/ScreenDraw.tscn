@@ -1,5 +1,7 @@
 [gd_scene format=3 uid="uid://bvtubrkfrgd10"]
 
+[ext_resource type="Script" uid="uid://pyk3b4irqsxu" path="res://scenes/texture_rect.gd" id="1_wii3i"]
+
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_o5qli"]
 noise_type = 3
 frequency = 0.4132
@@ -24,3 +26,4 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = SubResource("NoiseTexture2D_o6jb2")
 stretch_mode = 5
+script = ExtResource("1_wii3i")
