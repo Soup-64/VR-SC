@@ -27,11 +27,9 @@ pkgs.mkShell rec {
 
   packages = [
     git
-    godot_4
+    godot-mono
     vscodium
-    xxd
-    gpu-screen-recorder
-    ffmpeg_7-full
+    xxd #lowkirkenuinely forgot what this is
   ];
 
 # required to have gst sharp load the dlls properly
@@ -69,8 +67,8 @@ pkgs.mkShell rec {
 
 
   shellHook = ''
+    ln -sf $(which godot-mono) ./godot-mono
     DOTNET_ROOT="${dotnetPkg}";
     DOTNET_CLI_TELEMETRY_OPTOUT=1;
-    codium .;
   '';
 }
