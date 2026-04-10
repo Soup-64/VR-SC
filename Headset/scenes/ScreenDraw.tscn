@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bvtubrkfrgd10"]
 
-[ext_resource type="Script" uid="uid://bnt7o3w3nebwt" path="res://scenes/screenRect.cs" id="1_wii3i"]
+[ext_resource type="Script" uid="uid://bnt7o3w3nebwt" path="res://scripts/screenRect.cs" id="1_wii3i"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_o5qli"]
 noise_type = 3
