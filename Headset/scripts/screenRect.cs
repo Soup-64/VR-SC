@@ -4,9 +4,11 @@ using Gst.App;
 using GLib;
 using System;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 public partial class screenRect : TextureRect
 {
+    private byte[] _sharedFrameBuffer;
     private Pipeline _pipeline;
     private AppSink _appSink;
     private RenderingDevice _rd;
@@ -21,6 +23,7 @@ public partial class screenRect : TextureRect
     public override void _Ready()
     {
         _expectedBytes = _width * _height * 4;
+        _sharedFrameBuffer = new byte[_expectedBytes];
 
         // 1. Setup the Godot GPU Texture
         SetupTexture();
@@ -103,38 +106,72 @@ public partial class screenRect : TextureRect
         ProcessSample(sample);
     }
 
+    private void UpdateGpuTexture()
+    {
+        Stopwatch sw = Stopwatch.StartNew();
+        _rd.TextureUpdate(_textureRid, 0, _sharedFrameBuffer);
+        // GD.Print($"textupdate took {sw.Elapsed.TotalMilliseconds}ms");
+    }
+
     private void ProcessSample(Sample sample)
     {
         if (sample == null) return;
+
+        long startBytes = GC.GetAllocatedBytesForCurrentThread();
+        Stopwatch sw = Stopwatch.StartNew();
 
         using Gst.Buffer buffer = sample.Buffer;
 
         if (buffer.Map(out MapInfo mapInfo, MapFlags.Read))
         {
-            //init to expect size not actual to strip extra data
-            //breaks a later check probably lol
-            byte[] frameData = new byte[_expectedBytes];
 
-            System.Buffer.BlockCopy(mapInfo.Data, 0, frameData, 0, _expectedBytes);
-            // mapInfo.Data.CopyTo(frameData, 0);
+            double mapTime = sw.Elapsed.TotalMilliseconds;
+            sw.Restart();
 
-            CallDeferred(MethodName.UpdateGpuTexture, frameData);
+            unsafe
+            {
+                // Zero-copy span over GStreamer memory
+                var nativeSpan = new ReadOnlySpan<byte>((void*)mapInfo.DataPtr, _expectedBytes);
+
+                // Span over our pre-allocated heap array
+                var managedSpan = new Span<byte>(_sharedFrameBuffer);
+
+                // Fast hardware copy from C -> C#
+                nativeSpan.CopyTo(managedSpan);
+            }
+
+            // Safe to defer, because _sharedFrameBuffer lives on the heap
+            CallDeferred(MethodName.UpdateGpuTexture);
+
+            double uploadTime = sw.Elapsed.TotalMilliseconds;
 
             buffer.Unmap(mapInfo);
-        }
-    }
 
-    private void UpdateGpuTexture(byte[] frameData)
-    {
-        if (frameData.Length == _expectedBytes)
-        {
-            var ret = _rd.TextureUpdate(_textureRid, 0, frameData);
-            // GD.Print(ret);
+            // 2. Calculate total allocations for this single frame
+            long totalAllocated = GC.GetAllocatedBytesForCurrentThread() - startBytes;
+
+            // Print the profile data (Warning: This will spam your console, use it briefly to gather data)
+            // GD.Print($"Allocated: {totalAllocated} bytes | Map Time: {mapTime:F3}ms | GPU Upload Time: {uploadTime:F3}ms");
         }
-        else
-        {
-            GD.Print($"no draw! got: {frameData.Length} =/= expect: {_expectedBytes}");
-        }
+
+        // //init to expect size not actual to strip extra data
+        // //breaks a later check probably lol
+        // byte[] frameData = new byte[_expectedBytes];
+
+        // //Trim data, mapinfo.data does this internally but we only want a subset
+        // unsafe
+        // {
+        //     // Zero-copy: This span points directly to GStreamer's native memory block
+        //     Span<byte> nativeSpan = new Span<byte>((void*)mapInfo.DataPtr, _expectedBytes);
+        // }
+        // // Marshal.Copy(mapInfo.DataPtr, frameData, 0, (int)_expectedBytes);
+
+        // // System.Buffer.BlockCopy(mapInfo.Data, 0, frameData, 0, _expectedBytes);
+        // // mapInfo.Data.CopyTo(frameData, 0);
+
+        // CallDeferred(MethodName.UpdateGpuTexture, frameData);
+
+        // buffer.Unmap(mapInfo);
     }
 
     public override void _ExitTree()

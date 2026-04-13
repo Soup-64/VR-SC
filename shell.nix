@@ -27,8 +27,9 @@ pkgs.mkShell rec {
 
   packages = [
     git
-    godot-mono
+#     godot-mono
     vscodium
+    dotnetPkg
     xxd #lowkirkenuinely forgot what this is
   ];
 
