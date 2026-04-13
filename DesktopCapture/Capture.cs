@@ -174,8 +174,8 @@ class Capture
         string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} always-copy=true keepalive-time=16 ! " +
                         $"videoconvert ! videorate ! " +
                         $"video/x-raw,format=NV12,framerate=60/1 ! queue ! " +
-                        $"vaav1enc rate-control=vbr bitrate=10000 ! av1parse ! " + //rav1enc for cpu?
-                        $"rtpav1pay ! udpsink host=127.0.0.1 port=8255 sync=false";
+                        $"vaav1enc rate-control=cbr bitrate=10000 key-int-max=30 ! av1parse ! " + //rav1enc for cpu?
+                        $"rtpav1pay mtu=1300 ! udpsink host=127.0.0.1 port=8255 sync=false";
         //                 //$"matroskamux ! filesink location=wayland_capture_gpu.mkv";
 
         var pipeline = Parse.Launch(pipestr);

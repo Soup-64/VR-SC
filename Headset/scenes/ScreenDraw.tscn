@@ -2,13 +2,6 @@
 
 [ext_resource type="Script" uid="uid://bnt7o3w3nebwt" path="res://scripts/screenRect.cs" id="1_wii3i"]
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_o5qli"]
-noise_type = 3
-frequency = 0.4132
-
-[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_o6jb2"]
-noise = SubResource("FastNoiseLite_o5qli")
-
 [node name="ScreenDraw" type="Control" unique_id=88709259]
 layout_mode = 3
 anchors_preset = 15
@@ -24,6 +17,5 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("NoiseTexture2D_o6jb2")
 stretch_mode = 5
 script = ExtResource("1_wii3i")

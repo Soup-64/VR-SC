@@ -37,8 +37,9 @@ public partial class screenRect : TextureRect
         // gst pipeline
         // Cemit-signals=true required to trigger app sink updates 
         string pipelineString =
-            "udpsrc port=8255 caps=\"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)AV1\" ! queue ! " +
-            "rtpav1depay ! av1parse ! vaav1dec ! videorate ! videoconvert ! video/x-raw,format=RGBA,framerate=60/1 ! " +
+            "udpsrc port=8255 buffer-size=2000000 caps=\"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)AV1\" ! " +
+            "rtpjitterbuffer latency=50 drop-on-latency=true ! rtpav1depay ! queue max-size-bytes=0 max-size-buffers=3 max-size-time=0 ! " +
+            "av1parse ! vaav1dec ! videorate ! videoconvert ! video/x-raw,format=RGBA,framerate=60/1 ! " +
             "appsink name=godotsink drop=true max-buffers=1 sync=false emit-signals=true";
 
         _pipeline = Parse.Launch(pipelineString) as Pipeline;
@@ -84,8 +85,10 @@ public partial class screenRect : TextureRect
         byte[] emptyData = new byte[_expectedBytes];
         var view = new RDTextureView();
 
-        var dataArray = new Godot.Collections.Array<byte[]>();
-        dataArray.Add(emptyData);
+        var dataArray = new Godot.Collections.Array<byte[]>
+        {
+            emptyData
+        };
 
         _textureRid = _rd.TextureCreate(fmt, view, dataArray);
 
@@ -103,6 +106,25 @@ public partial class screenRect : TextureRect
         var element = (Element)sender;
         // 'pull-sample' is an action signal, we can trigger it directly to get the sample
         using Sample sample = (Sample)element.Emit("pull-sample");
+        using Caps caps = sample.Caps;
+        if (caps != null)
+        {
+            var structure = caps.GetStructure(0);
+            if (structure.GetInt("width", out int width) &&
+                structure.GetInt("height", out int height))
+            {
+                if (_width != width || _height != height)
+                {
+                    GD.Print($"Video Size Changed: {width}x{height}");
+                    //rebuild buffer if size changes
+                    _width = width;
+                    _height = height;
+                    _expectedBytes = _width * _height * 4;
+                    _sharedFrameBuffer = new byte[_expectedBytes];
+                    SetupTexture();
+                }
+            }
+        }
         ProcessSample(sample);
     }
 
