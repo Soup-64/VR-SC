@@ -6,9 +6,12 @@ pkgs.mkShell rec {
   dotnetPkg =
     (with dotnetCorePackages; combinePackages [
       sdk_10_0
+      sdk_8_0
+      sdk_9_0
     ]);
 
   deps = [
+    pkg-config
     zlib
     zlib.dev
     openssl
@@ -27,7 +30,7 @@ pkgs.mkShell rec {
 
   packages = [
     git
-#     godot-mono
+    godot-mono.unwrapped
     vscodium
     dotnetPkg
     xxd #lowkirkenuinely forgot what this is

@@ -3,10 +3,6 @@
 [ext_resource type="Script" uid="uid://1f05dacckes0" path="res://scripts/main.gd" id="1_o5qli"]
 [ext_resource type="PackedScene" uid="uid://bvtubrkfrgd10" path="res://scenes/ScreenDraw.tscn" id="2_0wfyh"]
 
-[sub_resource type="Environment" id="Environment_0wfyh"]
-background_mode = 1
-background_color = Color(0, 0, 0, 0)
-
 [sub_resource type="QuadMesh" id="QuadMesh_0wfyh"]
 lightmap_size_hint = Vector2i(22, 12)
 
@@ -29,6 +25,10 @@ sky_material = SubResource("ProceduralSkyMaterial_0wfyh")
 background_mode = 1
 background_color = Color(0, 0, 0, 0)
 sky = SubResource("Sky_sugp2")
+ambient_light_source = 2
+ambient_light_color = Color(0.4465382, 0.6848819, 0.7526735, 1)
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_0wfyh"]
 
 [node name="Root" type="Node3D" unique_id=1933782952]
 script = ExtResource("1_o5qli")
@@ -38,7 +38,6 @@ current = true
 
 [node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D" unique_id=1526990044]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
-environment = SubResource("Environment_0wfyh")
 current = true
 
 [node name="LeftHand" type="XRController3D" parent="XROrigin3D" unique_id=411452457]
@@ -67,3 +66,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -3)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1515302920]
 environment = SubResource("Environment_jyhfs")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2098097475]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4899182, 0, -2.7690136)
+mesh = SubResource("CapsuleMesh_0wfyh")

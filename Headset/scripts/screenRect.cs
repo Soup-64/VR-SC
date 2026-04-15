@@ -39,8 +39,9 @@ public partial class screenRect : TextureRect
         string pipelineString =
             "udpsrc port=8255 buffer-size=2000000 caps=\"application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)AV1\" ! " +
             "rtpjitterbuffer latency=50 drop-on-latency=true ! rtpav1depay ! queue max-size-bytes=0 max-size-buffers=3 max-size-time=0 ! " +
-            "av1parse ! vaav1dec ! videorate ! videoconvert ! video/x-raw,format=RGBA,framerate=60/1 ! " +
+            "av1parse ! decodebin ! videorate ! videoconvert ! video/x-raw,format=RGBA,framerate=60/1 ! " +
             "appsink name=godotsink drop=true max-buffers=1 sync=false emit-signals=true";
+//             swap vaav1dec with decodebin for quest
 
         _pipeline = Parse.Launch(pipelineString) as Pipeline;
 

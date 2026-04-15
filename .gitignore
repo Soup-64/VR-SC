@@ -19,3 +19,7 @@ obj/
 *.mkv
 *.mp4
 /Shared-Memory-Godot
+/gstreamer-1.0-android-universal-1.28.2
+/gstreamer_build
+/modules/mono
+VR-SC-Headset-2.apk
