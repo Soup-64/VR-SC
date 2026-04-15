@@ -36,11 +36,17 @@ project/assembly_name="VR-SC-Headset"
 
 rendering_device/driver.windows="d3d12"
 renderer/rendering_method="mobile"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=1
+viewport/transparent_background=true
+vrs/mode=2
 
 [xr]
 
 openxr/enabled=true
 openxr/environment_blend_mode=2
+openxr/foveation_level=3
+openxr/foveation_dynamic=true
 openxr/extensions/spatial_entity/enabled=true
 openxr/extensions/spatial_entity/enable_spatial_anchors=true
 openxr/extensions/spatial_entity/enable_persistent_anchors=true
@@ -51,3 +57,4 @@ openxr/extensions/spatial_entity/enable_marker_tracking=true
 openxr/extensions/spatial_entity/enable_builtin_marker_tracking=true
 openxr/extensions/eye_gaze_interaction=true
 shaders/enabled=true
+openxr/extensions/meta/passthrough=true

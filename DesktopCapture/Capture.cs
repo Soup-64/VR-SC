@@ -40,18 +40,22 @@ class Capture
 
         await createRequest.WatchResponseAsync(reply =>
         {
+            Console.WriteLine("hi!");
             if (reply.response == 0)
             {
+                Console.WriteLine("ok!");
                 string realSessionPath = reply.results["session_handle"].ToString()!;
                 sessionTcs.SetResult(new ObjectPath(realSessionPath));
             }
             else
             {
+                Console.WriteLine("except!");
                 sessionTcs.SetException(new Exception("User or system rejected session creation."));
             }
         });
 
         //await session
+        Console.WriteLine($"await here {sessionTcs.Task.Status}");
         ObjectPath realSessionHandle = await sessionTcs.Task;
         Console.WriteLine($"Session established at: {realSessionHandle}");
 
@@ -66,6 +70,7 @@ class Capture
                 { "cursor_mode", (uint)2 }, //1 no cursor 2 show cursor 4 cursor metadata
                 { "persist_mode", (uint)1 } //0 no persist 1 while running 2 until revoked
             });
+
 
         var selectRequest = connection.CreateProxy<IRequest>("org.freedesktop.portal.Desktop", selectRequestHandle);
         var selectTcs = new TaskCompletionSource<bool>();
