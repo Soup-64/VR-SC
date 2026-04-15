@@ -11,7 +11,7 @@ namespace DesktopCapture;
 
 class Capture
 {
-    public static async Task ProcessDbus()
+    public static async Task ProcessDbus(string ip, string port)
     {
         int reqnum = 0;
         string sessionToken = "VR_Screencaster_app_session_0";
@@ -180,7 +180,7 @@ class Capture
                         $"videoconvert ! videorate ! " +
                         $"video/x-raw,format=NV12,framerate=60/1 ! queue ! " +
                         $"vaav1enc rate-control=cbr bitrate=10000 key-int-max=30 ! av1parse ! " + //rav1enc for cpu?
-                        $"rtpav1pay mtu=1300 ! udpsink host=127.0.0.1 port=8255 sync=false";
+                        $"rtpav1pay mtu=1300 ! udpsink host={ip} port={port} sync=false";
         //                 //$"matroskamux ! filesink location=wayland_capture_gpu.mkv";
 
         var pipeline = Parse.Launch(pipestr);
