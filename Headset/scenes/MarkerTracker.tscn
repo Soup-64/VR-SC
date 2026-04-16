@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bxt8nb4wtijew"]
+
+[ext_resource type="Script" uid="uid://x7qldflq6eph" path="res://scenes/marker_tracker.gd" id="1_q3tte"]
+
+[node name="MarkerTracker" type="Node3D" unique_id=567348031]
+script = ExtResource("1_q3tte")
