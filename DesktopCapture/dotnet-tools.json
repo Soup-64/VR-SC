@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "tmds.dbus.tool": {
+      "version": "0.92.0",
+      "commands": [
+        "dotnet-dbus"
+      ],
+      "rollForward": false
+    }
+  }
+}

@@ -1,10 +1,12 @@
 using Godot;
 using Gst;
 using Gst.App;
-using GLib;
 using System;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.Loader;
+using GLib;
 
 public partial class screenRect : TextureRect
 {
@@ -20,15 +22,85 @@ public partial class screenRect : TextureRect
     private int _height = 1080;
     private int _expectedBytes;
 
+   static screenRect()
+    {
+        // GD.Print("Init soname patching");
+
+        // foreach (AssemblyLoadContext c in AssemblyLoadContext.All)
+        // {
+        //     c.ResolvingUnmanagedDll += OnResolvingUnmanagedDll;
+        // }
+        // foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+        // {
+        //     AttachResolver(asm);
+        // }
+
+        // AppDomain.CurrentDomain.AssemblyLoad += (sender, args) =>
+        // {
+        //     AttachResolver(args.LoadedAssembly);
+        // };
+    }
+
+    private static void AttachResolver(Assembly asm)
+    {
+        string name = asm.GetName().Name;
+
+        if (name == null || name.StartsWith("netstandard") || name.StartsWith("gstreamer-sharp") || name.StartsWith("System") || name.StartsWith("Godot") || name.StartsWith("mscorlib"))
+            return;
+        
+        GD.Print($"Setting resolver for {name}");
+        try
+        {
+            NativeLibrary.SetDllImportResolver(asm, ResolveGStreamerLibrary);
+        }
+        catch(Exception e)
+        {
+            GD.PrintErr($"\tFailed to set resolver! {e.Message}");
+        }
+    }
+
+    private static IntPtr CoreResolver(string libraryName, Assembly assembly)
+    {
+        string targetLib = libraryName.ToLowerInvariant() switch
+        {
+            "libdl.so.2" or "dl" => "libdl.so",
+            var name when name.Contains("gstreamer") || name.Contains("glib") || name.Contains("gobject") => "libgstreamer_android.so",
+            _ => null
+        };
+
+        if (targetLib == null) return IntPtr.Zero;
+
+        GD.Print($"Redirecting '{libraryName}' -> '{targetLib}' from {assembly.GetName().Name}");
+        try
+        {
+            return NativeLibrary.Load(targetLib, assembly, null);
+        }
+        catch (Exception ex)
+        {
+            GD.PrintErr($"\tFailed to load {targetLib}: {ex.Message}");
+            return IntPtr.Zero;
+        }
+    }
+
+    private static IntPtr ResolveGStreamerLibrary(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)
+    {
+        return CoreResolver(libraryName, assembly);
+    }
+
+    private static IntPtr OnResolvingUnmanagedDll(Assembly assembly, string libraryName)
+    {
+        return CoreResolver(libraryName, assembly);
+    }
+
     public override void _Ready()
     {
         _expectedBytes = _width * _height * 4;
         _sharedFrameBuffer = new byte[_expectedBytes];
 
-        // 1. Setup the Godot GPU Texture
+        // texture init
         SetupTexture();
-
-        // 2. Initialize GStreamer
+        // gst init (DllImport)
+        // NativeLibrary.SetDllImportResolver(typeof(Gst.Application).Assembly, ResolveGStreamerLibrary);
         Gst.Application.Init();
 
         //example src gst-launch-1.0 -v videotestsrc pattern=ball ! video/x-raw,width=1920,height=1080,format=RGBA,framerate=60/1 ! videoconvert ! videorate ! queue ! vaav1enc rate-control=vbr bitrate=10000 ! av1parse ! rtpav1pay ! udpsink host=127.0.0.1 port=8255 sync=false
@@ -41,7 +113,7 @@ public partial class screenRect : TextureRect
             "rtpjitterbuffer latency=50 drop-on-latency=true ! rtpav1depay ! queue max-size-bytes=0 max-size-buffers=3 max-size-time=0 ! " +
             "av1parse ! decodebin ! videorate ! videoconvert ! video/x-raw,format=RGBA,framerate=60/1 ! " +
             "appsink name=godotsink drop=true max-buffers=1 sync=false emit-signals=true";
-//             swap vaav1dec with decodebin for quest
+        //             swap vaav1dec with decodebin for quest
 
         _pipeline = Parse.Launch(pipelineString) as Pipeline;
 
@@ -122,7 +194,7 @@ public partial class screenRect : TextureRect
                     _height = height;
                     _expectedBytes = _width * _height * 4;
                     _sharedFrameBuffer = new byte[_expectedBytes];
-                    SetupTexture();
+                    CallDeferred(method: MethodName.SetupTexture);
                 }
             }
         }
@@ -164,7 +236,7 @@ public partial class screenRect : TextureRect
             }
 
             // Safe to defer, because _sharedFrameBuffer lives on the heap
-            CallDeferred(MethodName.UpdateGpuTexture);
+            CallDeferred(method: MethodName.UpdateGpuTexture);
 
             double uploadTime = sw.Elapsed.TotalMilliseconds;
 

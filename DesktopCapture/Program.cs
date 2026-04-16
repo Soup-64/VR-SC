@@ -7,7 +7,7 @@ namespace DesktopCapture;
 class Program
 {
     static readonly string targetIp = "127.0.0.1";
-    static readonly string targetPort = "8825";
+    static readonly string targetPort = "8255";
 
     static async Task Main()
     {
