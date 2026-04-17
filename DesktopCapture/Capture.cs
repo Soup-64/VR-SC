@@ -176,12 +176,17 @@ class Capture
         //resizing will nuke the stream, pipeline has to be rebuilt but handling this is very hard
         //artifacting on certain window sizes
         //mostly mitigated by targeting full screen share only instead
+        // string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} always-copy=true keepalive-time=16 ! " +
+        //                 $"videoconvert ! videorate ! " +
+        //                 $"video/x-raw,format=NV12,framerate=60/1 ! queue ! " +
+        //                 $"vaav1enc rate-control=cbr bitrate=10000 key-int-max=30 ! av1parse ! " + //rav1enc for cpu?
+        //                 $"rtpav1pay mtu=1300 ! udpsink host={ip} port={port} sync=false";
+        //                 //$"matroskamux ! filesink location=wayland_capture_gpu.mkv";
+
         string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} always-copy=true keepalive-time=16 ! " +
                         $"videoconvert ! videorate ! " +
-                        $"video/x-raw,format=NV12,framerate=60/1 ! queue ! " +
-                        $"vaav1enc rate-control=cbr bitrate=10000 key-int-max=30 ! av1parse ! " + //rav1enc for cpu?
-                        $"rtpav1pay mtu=1300 ! udpsink host={ip} port={port} sync=false";
-        //                 //$"matroskamux ! filesink location=wayland_capture_gpu.mkv";
+                        $"video/x-raw,format=NV12,framerate=24/1 ! queue ! " +
+                        $"videoconvert ! jpegenc quality=85 ! tcpserversink host=0.0.0.0 port={port}";
 
         var pipeline = Parse.Launch(pipestr);
         Console.WriteLine($"Pipeline valid? [{pipeline != null}]");

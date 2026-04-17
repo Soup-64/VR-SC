@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://bvtubrkfrgd10"]
 
-[ext_resource type="Script" uid="uid://bnt7o3w3nebwt" path="res://scripts/screenRect.cs" id="1_wii3i"]
+[ext_resource type="Script" uid="uid://dt1wa107ycoj7" path="res://scripts/TextureRect2.cs" id="1_wii3i"]
 
 [sub_resource type="Texture2DRD" id="Texture2DRD_wii3i"]
 
