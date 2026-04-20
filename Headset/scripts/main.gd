@@ -3,6 +3,11 @@ extends Node3D
 var xr_interface: XRInterface
 @onready var world_environment: WorldEnvironment = $WorldEnvironment
 
+func _input(event: InputEvent) -> void:
+	print("input! ", event)
+	if event.is_action_pressed("ui_accept"):
+		$Plane.position.y += 0.01
+
 func _ready() -> void:
 	xr_interface = XRServer.find_interface("OpenXR")
 	if xr_interface and xr_interface.is_initialized():

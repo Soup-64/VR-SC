@@ -1,8 +1,7 @@
 [gd_scene format=3 uid="uid://bvtubrkfrgd10"]
 
+[ext_resource type="Texture2D" uid="uid://4q335xxs2p" path="res://icon.svg" id="1_s52qo"]
 [ext_resource type="Script" uid="uid://dt1wa107ycoj7" path="res://scripts/TextureRect2.cs" id="1_wii3i"]
-
-[sub_resource type="Texture2DRD" id="Texture2DRD_wii3i"]
 
 [node name="ScreenDraw" type="Control" unique_id=88709259]
 layout_mode = 3
@@ -19,6 +18,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-texture = SubResource("Texture2DRD_wii3i")
-stretch_mode = 5
+texture = ExtResource("1_s52qo")
+expand_mode = 2
+stretch_mode = 4
 script = ExtResource("1_wii3i")

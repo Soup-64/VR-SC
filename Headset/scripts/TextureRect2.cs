@@ -11,19 +11,29 @@ public partial class TextureRect2 : TextureRect
     private string _senderIp = "127.0.0.1";
     private int _senderPort = 8255;
     private byte[] _frameBuffer = new byte[4000000];
-
-    private int width = 1920, height = 1200;
+    private Vector2I size = new();
 
     public override void _Ready()
     {
         //texture init
-        Image emptyImg = Image.CreateEmpty(width, height, false, Image.Format.Rgb8);
-        _imageTexture = ImageTexture.CreateFromImage(emptyImg);
-        this.Texture = _imageTexture;
+        CreateSurface(1920, 1200);
 
         //run decode work async, do not block frames on VR!
         GD.Print("starting async frame handler...");
         Task.Run(ReceiveStream);
+    }
+
+    private void CreateSurface(int inWidth, int inHeight)
+    {
+        Image emptyImg = Image.CreateEmpty(inWidth, inHeight, false, Image.Format.Rgb8);
+        _imageTexture = ImageTexture.CreateFromImage(emptyImg);
+        this.Texture = _imageTexture;
+        size.X = inWidth;
+        size.Y = inHeight;
+        SubViewport port = (SubViewport)GetParent().GetParent();
+        // port.Size = size;
+        // port must be square apparently
+        port.Size = new Vector2I(size.X,size.X);
     }
 
     private async Task ReceiveStream()
@@ -95,7 +105,13 @@ public partial class TextureRect2 : TextureRect
     {
         Image img = new Image();
         Error err = img.LoadJpgFromBuffer(jpegData);
-        img.Crop(width, height: height);
+        Vector2I newXY = img.GetSize();
+        if(newXY != size)
+        {
+            GD.Print($"New image size! {newXY}");
+            CreateSurface(newXY.X, newXY.Y);
+        }
+        // img.Crop(width, height: height);
 
         if (err == Error.Ok)
         {
