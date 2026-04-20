@@ -3,12 +3,13 @@ extends XRAnchor3D
 var marker_tracker: OpenXRMarkerTracker
 
 func _ready() -> void:
-	marker_tracker = XRServer.get_tracker(tracker)
+	print("Pos: ",self.global_position)
+	marker_tracker = XRServer.get_tracker(self.tracker)
 	if marker_tracker:
 		match marker_tracker.marker_type:
 			OpenXRSpatialComponentMarkerList.MARKER_TYPE_QRCODE:
 				var data: Variant = marker_tracker.get_marker_data()
-				print("qr code!")
+				print("qr code! ", marker_tracker)
 				if data is String:
 					# Data is a QR code as a string, usually a URL.
 					

@@ -1,19 +1,16 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Sockets;
-using System.Threading;
 using System.Threading.Tasks;
 
 public partial class TextureRect2 : TextureRect
 {
     private TcpClient _tcpClient;
-    private CancellationTokenSource _cts;
     private ImageTexture _imageTexture;
     private string _senderIp = "127.0.0.1";
     private int _senderPort = 8255;
-    private List<byte> _frameBuffer;
+    private byte[] _frameBuffer = new byte[4000000];
 
     private int width = 1920, height = 1200;
 
@@ -44,8 +41,7 @@ public partial class TextureRect2 : TextureRect
 
         using NetworkStream stream = _tcpClient.GetStream();
 
-        //4MB buffer, more than we ever really need
-        _frameBuffer = new List<byte>(4000000);
+        int len = 0;
         byte[] readBuffer = new byte[65536];
         bool capturing = false;
 
@@ -54,7 +50,9 @@ public partial class TextureRect2 : TextureRect
             int bytesRead = 0;
             try
             {
+                // Read at least might be better for efficiency but likely worse frame timing
                 bytesRead = await stream.ReadAsync(readBuffer, 0, readBuffer.Length);
+                // GD.Print($"read {bytesRead}");
             }
             catch (Exception e)
             {
@@ -62,33 +60,34 @@ public partial class TextureRect2 : TextureRect
             }
             if (bytesRead == 0) break;
 
+            //iterate through stream and copy data
+            //track when next image starts
             for (int i = 0; i < bytesRead; i++)
             {
-                byte b = readBuffer[i];
-                _frameBuffer.Add(b);
-                int count = _frameBuffer.Count;
+                //add and increment
+                _frameBuffer[len++] = readBuffer[i];
 
                 // start of jpeg
-                if (!capturing && count >= 2 && _frameBuffer[count - 2] == 0xFF && _frameBuffer[count - 1] == 0xD8)
+                if (!capturing && len >= 2 && _frameBuffer[len - 2] == 0xFF && _frameBuffer[len - 1] == 0xD8)
                 {
                     capturing = true;
-                    //clear buffer and start new image
-                    _frameBuffer.Clear();
-                    _frameBuffer.AddRange([0xFF, 0xD8]);
+                    //start new image by writing over the last one
+                    len = 2;
+                    _frameBuffer[0] = 0xFF;
+                    _frameBuffer[1] = 0xD8;
                 }
-                // EOF/end of jpeg
-                else if (capturing && count >= 2 && _frameBuffer[count - 2] == 0xFF && _frameBuffer[count - 1] == 0xD9)
+                // end of jpeg
+                else if (capturing && len >= 2 && _frameBuffer[len - 2] == 0xFF && _frameBuffer[len - 1] == 0xD9)
                 {
                     capturing = false;
-                    byte[] completeFrame = _frameBuffer.ToArray();
-                    GD.Print($"\tgot frame of size {completeFrame.Length}");
-                    _frameBuffer.Clear();
-
+                    len = 0;
+                    // GD.Print($"\tgot frame of size {completeFrame.Length}");
                     // Send the complete frame back to the Godot main thread
-                    CallDeferred(MethodName.UpdateTexture, completeFrame);
+                    CallDeferred(MethodName.UpdateTexture, _frameBuffer);
                 }
             }
         }
+        GD.Print("End of stream!");
     }
 
     //back in sync context, runs on object idle/end of frame
