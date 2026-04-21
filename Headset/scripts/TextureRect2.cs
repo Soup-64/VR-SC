@@ -8,10 +8,12 @@ public partial class TextureRect2 : TextureRect
 {
     private TcpClient _tcpClient;
     private ImageTexture _imageTexture;
-    private string _senderIp = "127.0.0.1";
+    private string _senderIp = "141.219.250.187";
     private int _senderPort = 8255;
     private byte[] _frameBuffer = new byte[4000000];
     private Vector2I size = new();
+    private Image img = new Image();
+    private Error err;
 
     public override void _Ready()
     {
@@ -33,7 +35,7 @@ public partial class TextureRect2 : TextureRect
         SubViewport port = (SubViewport)GetParent().GetParent();
         // port.Size = size;
         // port must be square apparently
-        port.Size = new Vector2I(size.X,size.X);
+        port.Size = new Vector2I(size.X, size.X);
     }
 
     private async Task ReceiveStream()
@@ -54,10 +56,11 @@ public partial class TextureRect2 : TextureRect
         int len = 0;
         byte[] readBuffer = new byte[65536];
         bool capturing = false;
+        int bytesRead = 0;
 
         while (_tcpClient.Connected)
         {
-            int bytesRead = 0;
+            bytesRead = 0;
             try
             {
                 // Read at least might be better for efficiency but likely worse frame timing
@@ -90,10 +93,15 @@ public partial class TextureRect2 : TextureRect
                 else if (capturing && len >= 2 && _frameBuffer[len - 2] == 0xFF && _frameBuffer[len - 1] == 0xD9)
                 {
                     capturing = false;
-                    len = 0;
                     // GD.Print($"\tgot frame of size {completeFrame.Length}");
-                    // Send the complete frame back to the Godot main thread
-                    CallDeferred(MethodName.UpdateTexture, _frameBuffer);
+                    // generate jpeg on background thread and defer it to render thread when ready
+                    // use a span to copy subset of array to loadjpeg and reduce allocs
+                    err = img.LoadJpgFromBuffer(_frameBuffer.AsSpan(0, len));
+                    len = 0;
+                    if (err == Error.Ok)
+                    {
+                        CallDeferred(MethodName.UpdateTexture, img);
+                    }
                 }
             }
         }
@@ -101,25 +109,15 @@ public partial class TextureRect2 : TextureRect
     }
 
     //back in sync context, runs on object idle/end of frame
-    private void UpdateTexture(byte[] jpegData)
+    private void UpdateTexture(Image inImg)
     {
-        Image img = new Image();
-        Error err = img.LoadJpgFromBuffer(jpegData);
-        Vector2I newXY = img.GetSize();
-        if(newXY != size)
+        Vector2I newXY = inImg.GetSize();
+        if (newXY != size)
         {
             GD.Print($"New image size! {newXY}");
             CreateSurface(newXY.X, newXY.Y);
         }
-        // img.Crop(width, height: height);
 
-        if (err == Error.Ok)
-        {
-            _imageTexture.Update(img);
-        }
-        else
-        {
-            GD.PrintErr("\tfailed to decode!");
-        }
+        _imageTexture.Update(inImg);
     }
 }
