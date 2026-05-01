@@ -2,5 +2,18 @@
 
 [ext_resource type="Script" uid="uid://x7qldflq6eph" path="res://scripts/marker_tracker.gd" id="1_q3tte"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q3tte"]
+albedo_color = Color(0.66049325, 0.00032584518, 0.66048867, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_10tya"]
+material = SubResource("StandardMaterial3D_q3tte")
+size = Vector2(0.1, 0.1)
+
 [node name="MarkerTracker" type="XRAnchor3D" unique_id=1275067669]
+show_when_tracked = true
 script = ExtResource("1_q3tte")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=300963330]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0)
+visible = false
+mesh = SubResource("PlaneMesh_10tya")

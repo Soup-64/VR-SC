@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 using Tmds.DBus;
 using Gst;
 using Task = System.Threading.Tasks.Task;
@@ -176,6 +171,8 @@ class Capture
         //resizing will nuke the stream, pipeline has to be rebuilt but handling this is very hard
         //artifacting on certain window sizes
         //mostly mitigated by targeting full screen share only instead
+
+        //av1/actual video stuff
         // string pipestr = $"pipewiresrc fd={fd} path={pipewireNode} always-copy=true keepalive-time=16 ! " +
         //                 $"videoconvert ! videorate ! " +
         //                 $"video/x-raw,format=NV12,framerate=60/1 ! queue ! " +
@@ -220,6 +217,8 @@ class Capture
     }
 }
 
+
+//some temp goofy slop I wanted to replace with the codegen but ran out of time
 [DBusInterface("org.freedesktop.portal.Request")]
 public interface IRequest : IDBusObject
 {

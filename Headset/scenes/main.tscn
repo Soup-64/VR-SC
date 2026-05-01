@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" uid="uid://1f05dacckes0" path="res://scripts/main.gd" id="1_o5qli"]
 [ext_resource type="PackedScene" uid="uid://bvtubrkfrgd10" path="res://scenes/ScreenDraw.tscn" id="2_0wfyh"]
+[ext_resource type="Environment" uid="uid://q641uk6cvcn5" path="res://new_environment.tres" id="2_o6xl0"]
+[ext_resource type="Script" uid="uid://ds47qpm4ruk54" path="res://scripts/plane.gd" id="2_tefeu"]
 [ext_resource type="Texture2D" uid="uid://4q335xxs2p" path="res://icon.svg" id="3_sugp2"]
 [ext_resource type="Script" uid="uid://b7igrg3ll6vts" path="res://scripts/manager.gd" id="4_jyhfs"]
 [ext_resource type="PackedScene" uid="uid://bxt8nb4wtijew" path="res://scenes/MarkerTracker.tscn" id="5_tbgi4"]
@@ -16,25 +18,13 @@ resource_local_to_scene = true
 transparency = 1
 shading_mode = 0
 albedo_texture = SubResource("ViewportTexture_o5qli")
-texture_filter = 4
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_0wfyh"]
-
-[sub_resource type="Sky" id="Sky_sugp2"]
-sky_material = SubResource("ProceduralSkyMaterial_0wfyh")
-
-[sub_resource type="Environment" id="Environment_jyhfs"]
-background_mode = 1
-background_color = Color(0, 0, 0, 0)
-sky = SubResource("Sky_sugp2")
-ambient_light_source = 2
-ambient_light_color = Color(0.4465382, 0.6848819, 0.7526735, 1)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jyhfs"]
 albedo_texture = ExtResource("3_sugp2")
 
 [sub_resource type="CapsuleMesh" id="CapsuleMesh_0wfyh"]
 material = SubResource("StandardMaterial3D_jyhfs")
+height = 1.035
 
 [node name="Root" type="Node3D" unique_id=1933782952]
 script = ExtResource("1_o5qli")
@@ -44,6 +34,7 @@ current = true
 
 [node name="XRCamera3D" type="XRCamera3D" parent="XROrigin3D" unique_id=1526990044]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.7, 0)
+environment = ExtResource("2_o6xl0")
 current = true
 
 [node name="LeftHand" type="XRController3D" parent="XROrigin3D" unique_id=411452457]
@@ -55,9 +46,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5)
 tracker = &"right_hand"
 
 [node name="Plane" type="MeshInstance3D" parent="." unique_id=1977689238]
-transform = Transform3D(0.5392686, 0, -0.18463293, 0, 0.57, 0, 0.18463293, 0, 0.5392686, -0.055, 1.4917837, -0.40149042)
+transform = Transform3D(0.5699882, 0, -0.0036808774, 0, 0.5700001, 0, 0.0036808774, 0, 0.5699882, -0.056203127, 1.0849624, -0.76548946)
 mesh = SubResource("QuadMesh_tbgi4")
 surface_material_override/0 = SubResource("StandardMaterial3D_0wfyh")
+script = ExtResource("2_tefeu")
 
 [node name="SubViewport" type="SubViewport" parent="Plane" unique_id=253627729]
 transparent_bg = true
@@ -66,6 +58,7 @@ snap_2d_vertices_to_pixel = true
 msaa_2d = 3
 msaa_3d = 3
 screen_space_aa = 2
+scaling_3d_scale = 2.0
 texture_mipmap_bias = 2.0
 canvas_item_default_texture_filter = 0
 gui_embed_subwindows = true
@@ -80,7 +73,7 @@ render_target_update_mode = 4
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -3)
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1515302920]
-environment = SubResource("Environment_jyhfs")
+environment = ExtResource("2_o6xl0")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2098097475]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.4899182, 0.97573984, -2.7690136)
@@ -89,3 +82,8 @@ mesh = SubResource("CapsuleMesh_0wfyh")
 [node name="Manager" type="Node3D" parent="." unique_id=786803498]
 script = ExtResource("4_jyhfs")
 marker_tracker_scene = ExtResource("5_tbgi4")
+
+[connection signal="input_vector2_changed" from="XROrigin3D/LeftHand" to="Plane" method="_on_left_hand_input_vector_2_changed"]
+[connection signal="input_vector2_changed" from="XROrigin3D/RightHand" to="Plane" method="_on_right_hand_input_vector_2_changed"]
+[connection signal="added_spatial_entity" from="Manager" to="Plane" method="_on_manager_added_spatial_entity"]
+[connection signal="removed_spatial_entity" from="Manager" to="Plane" method="_on_manager_removed_spatial_entity"]
